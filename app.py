@@ -28,6 +28,9 @@ register_callbacks(app, pdf_storage)
 # Setup download route
 setup_download_route(app, pdf_storage)
 
+# Expose the server for gunicorn
+server = app.server
+
 if __name__ == '__main__':
     # Only enable debug mode if not running on deployment
     debug_mode = not bool(os.environ.get('RENDER'))
