@@ -1,4 +1,4 @@
-# CiampittiLab Labels Generator
+# Ciampitti Lab Labels Generator
 
 A comprehensive Dash application for generating laboratory labels with QR codes and barcodes, adapted from original work by **Luiz Felipe Almeida** and **Luiz Rosso**.
 
@@ -29,7 +29,7 @@ A comprehensive Dash application for generating laboratory labels with QR codes 
    pip install -r requirements.txt
    ```
 
-## Usage
+## Local Usage
 
 1. Run the application:
    ```bash
@@ -50,7 +50,6 @@ A comprehensive Dash application for generating laboratory labels with QR codes 
 
 - `app.py` - Main Dash application
 - `requirements.txt` - Python dependencies
-- `labels_metadata/` - Directory for CSV files (created automatically)
 - `labels_pdf/` - Directory for generated PDF files (created automatically)
 
 ## CSV Format Requirements
@@ -63,10 +62,10 @@ CSV should contain columns: `biomass_info1`, `biomass_info2`, `biomass_info3`, `
 
 ## Credits
 
-This application is adapted from original work by:
+This application was developed by **Pedro Cisdeli** and is adapted from original work by:
 - **Luiz Felipe Almeida** - QR code label generation system
 - **Luiz Rosso** - Biomass barcode label system
 
 ## License
 
-This project is open source and available under the MIT License. 
+This project is open source and available under the CC BY-NC-SA 4.0 license. See the [LICENSE](LICENSE) file for more details.
