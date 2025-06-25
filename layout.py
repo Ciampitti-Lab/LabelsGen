@@ -32,42 +32,61 @@ def create_layout():
             ])
         ]),
         
-        # Control Panel
-        dbc.Row([
-            dbc.Col([
-                dbc.Card([
-                    dbc.CardBody([
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Label("Label Style", className="fw-bold mb-2"),
-                                dcc.Dropdown(
-                                    id="label-style",
-                                    options=[
-                                        {"label": "Luiz Felipe Almeida Style (QR Codes)", "value": "qr"},
-                                        {"label": "Biomass Luiz Rosso Style (Barcodes/QR)", "value": "barcode"}
-                                    ],
-                                    value="qr",
-                                    clearable=False,
-                                    style={"font-size": "14px"}
+        # Main Options Section
+        html.Div([
+            html.H4("Choose Your Method", className="text-center mb-4", style={"color": "#2c3e50", "font-weight": "400"}),
+            html.P("Select one of the two options below to generate your labels", 
+                  className="text-center text-muted mb-5", style={"font-size": "1.1rem"}),
+            
+            dbc.Row([
+                # Option 1: CSV Upload
+                dbc.Col([
+                    dbc.Card([
+                        dbc.CardBody([
+                            html.Div([
+                                html.I(className="fas fa-upload", style={"font-size": "3rem", "color": "#007bff", "margin-bottom": "1rem"}),
+                                html.H5("Option 1: Upload CSV File", className="mb-3", style={"color": "#2c3e50", "font-weight": "500"}),
+                                html.P("Have an existing CSV file? Upload it here to generate labels quickly.", 
+                                      className="text-muted mb-4", style={"font-size": "0.95rem"}),
+                                dbc.Button(
+                                    [html.I(className="fas fa-cloud-upload-alt me-2"), "Upload CSV File"], 
+                                    id="upload-modal-btn", 
+                                    color="primary",
+                                    size="lg",
+                                    className="w-100",
+                                    style={"border-radius": "8px", "font-weight": "500"}
                                 )
-                            ], md=6),
-                            dbc.Col([
-                                dbc.Label("CSV Upload", className="fw-bold mb-2"),
-                                html.Div([
-                                    dbc.Button(
-                                        "Upload CSV File", 
-                                        id="upload-modal-btn", 
-                                        color="outline-primary",
-                                        className="w-100",
-                                        style={"border-radius": "8px"}
-                                    )
-                                ])
-                            ], md=6)
-                        ])
-                    ], style={"padding": "1.5rem"})
-                ], className="mb-4 shadow-sm", style={"border": "none", "border-radius": "12px"})
-            ])
-        ]),
+                            ], className="text-center")
+                        ], style={"padding": "2rem"})
+                    ], className="h-100 shadow-sm", style={"border": "2px solid #e3f2fd", "border-radius": "12px"})
+                ], md=6),
+                
+                # Option 2: Manual Entry
+                dbc.Col([
+                    dbc.Card([
+                        dbc.CardBody([
+                            html.Div([
+                                html.I(className="fas fa-edit", style={"font-size": "3rem", "color": "#28a745", "margin-bottom": "1rem"}),
+                                html.H5("Option 2: Manual Data Entry", className="mb-3", style={"color": "#2c3e50", "font-weight": "500"}),
+                                html.P("Prefer to create data manually? Fill out the form below to generate custom labels.", 
+                                      className="text-muted mb-4", style={"font-size": "0.95rem"}),
+                                dbc.Button(
+                                    [html.I(className="fas fa-edit me-2"), "Start Manual Entry"], 
+                                    id="manual-entry-modal-btn", 
+                                    color="success",
+                                    size="lg",
+                                    className="w-100",
+                                    style={"border-radius": "8px", "font-weight": "500"}
+                                )
+                            ], className="text-center")
+                        ], style={"padding": "2rem"})
+                    ], className="h-100 shadow-sm", style={"border": "2px solid #e8f5e8", "border-radius": "12px"})
+                ], md=6)
+            ], className="mb-5")
+        ], className="mb-5"),
+        
+        # Divider
+        html.Hr(style={"border": "none", "height": "2px", "background": "linear-gradient(90deg, #007bff, #28a745)", "margin": "3rem 0", "opacity": "0.3"}),
         
         # Upload Modal
         dbc.Modal([
@@ -144,13 +163,30 @@ def create_layout():
             ])
         ], id="upload-modal", size="xl"),
         
-        # Manual QR Code Input Section
-        html.Div([
-            dbc.Card([
-                dbc.CardHeader([
-                    html.H5("Manual Data Entry - QR Code Labels", className="mb-0", style={"color": "#2c3e50", "font-weight": "400"})
-                ]),
-                dbc.CardBody([
+        # Manual Entry Modal
+        dbc.Modal([
+            dbc.ModalHeader("Manual Data Entry"),
+            dbc.ModalBody([
+                # Label Style Selection
+                dbc.Row([
+                    dbc.Col([
+                        dbc.Label("Label Style", className="fw-bold mb-2"),
+                        dcc.Dropdown(
+                            id="label-style",
+                            options=[
+                                {"label": "Luiz Felipe Almeida Style (QR Codes)", "value": "qr"},
+                                {"label": "Biomass Luiz Rosso Style (Barcodes/QR)", "value": "barcode"}
+                            ],
+                            value="qr",
+                            clearable=False,
+                            style={"font-size": "14px"}
+                        )
+                    ], md=12)
+                ], className="mb-4"),
+                
+                # QR Code Entry Form (shown by default)
+                html.Div([
+                    html.H6("QR Code Labels", className="mb-3", style={"color": "#2c3e50"}),
                     dbc.Row([
                         dbc.Col([
                             dbc.Label("Project Name", className="fw-bold"),
@@ -164,7 +200,7 @@ def create_layout():
                         ], md=4),
                         dbc.Col([
                             dbc.Label("Study Year", className="fw-bold"),
-                            dbc.Input(id="study-year", type="number", value=2024, min=2020, max=2030,
+                            dbc.Input(id="study-year", type="number", value=2025, min=2020, max=2030,
                                     style={"border-radius": "6px"})
                         ], md=4)
                     ], className="mb-3"),
@@ -185,30 +221,17 @@ def create_layout():
                             dbc.Input(id="sampling-stage", placeholder="e.g., V4, R2, R6", value="V4",
                                     style={"border-radius": "6px"})
                         ], md=4)
-                    ], className="mb-4"),
-                    
-                    html.Div([
-                        dbc.Button("Generate CSV Data", id="generate-csv-btn", color="success", 
-                                 size="lg", className="px-5", 
-                                 style={"border-radius": "8px", "font-weight": "500"})
-                    ], className="text-center")
-                ], style={"padding": "2rem"})
-            ], className="mb-4 shadow-sm", style={"border": "none", "border-radius": "12px"})
-        ], id="qr-section"),
-        
-        # Manual Biomass Input Section
-        html.Div([
-            dbc.Card([
-                dbc.CardHeader([
-                    html.H5("Manual Data Entry - Biomass Labels", className="mb-0", style={"color": "#2c3e50", "font-weight": "400"})
-                ]),
-                dbc.CardBody([
-                    # QR vs Barcode choice for biomass style
+                    ], className="mb-4")
+                ], id="modal-qr-section"),
+                
+                # Biomass Entry Form (hidden by default)
+                html.Div([
+                    html.H6("Biomass Labels", className="mb-3", style={"color": "#2c3e50"}),
                     dbc.Row([
                         dbc.Col([
                             dbc.Label("Output Type", className="fw-bold"),
                             dbc.RadioItems(
-                                id="biomass-output-type",
+                                id="modal-biomass-output-type",
                                 options=[
                                     {"label": "QR Codes", "value": "qr"},
                                     {"label": "Barcodes", "value": "barcode"}
@@ -223,38 +246,40 @@ def create_layout():
                     dbc.Row([
                         dbc.Col([
                             dbc.Label("Info 1 (Main ID)", className="fw-bold"),
-                            dbc.Input(id="biomass-info1", placeholder="Primary identifier",
+                            dbc.Input(id="modal-biomass-info1", placeholder="Primary identifier",
                                     style={"border-radius": "6px"})
                         ], md=3),
                         dbc.Col([
                             dbc.Label("Info 2", className="fw-bold"),
-                            dbc.Input(id="biomass-info2", placeholder="Secondary info",
+                            dbc.Input(id="modal-biomass-info2", placeholder="Secondary info",
                                     style={"border-radius": "6px"})
                         ], md=3),
                         dbc.Col([
                             dbc.Label("Info 3", className="fw-bold"),
-                            dbc.Input(id="biomass-info3", placeholder="Tertiary info",
+                            dbc.Input(id="modal-biomass-info3", placeholder="Tertiary info",
                                     style={"border-radius": "6px"})
                         ], md=3),
                         dbc.Col([
                             dbc.Label("Unique Code (optional)", className="fw-bold"),
-                            dbc.Input(id="biomass-ucode", placeholder="Optional unique code",
+                            dbc.Input(id="modal-biomass-ucode", placeholder="Optional unique code",
                                     style={"border-radius": "6px"})
                         ], md=3)
                     ], className="mb-4"),
                     
                     html.Div([
-                        dbc.Button("Add Row", id="add-row-btn", color="outline-primary", 
+                        dbc.Button("Add Row", id="modal-add-row-btn", color="outline-primary", 
                                  className="me-3", style={"border-radius": "6px"}),
-                        dbc.Button("Generate CSV Data", id="generate-biomass-csv-btn", color="success", 
-                                 disabled=True, style={"border-radius": "6px", "font-weight": "500"})
                     ], className="text-center mb-3"),
                     
                     html.Hr(style={"border-top": "1px solid #dee2e6", "margin": "2rem 0"}),
-                    html.Div(id="biomass-table-container")
-                ], style={"padding": "2rem"})
-            ], className="mb-4 shadow-sm", style={"border": "none", "border-radius": "12px"})
-        ], id="biomass-section", style={"display": "none"}),
+                    html.Div(id="modal-biomass-table-container")
+                ], id="modal-biomass-section", style={"display": "none"})
+            ]),
+            dbc.ModalFooter([
+                dbc.Button("Close", id="close-manual-modal", className="me-2", color="secondary"),
+                dbc.Button("Generate CSV Data", id="modal-generate-csv-btn", color="success")
+            ])
+        ], id="manual-entry-modal", size="xl"),
         
         # Data and Preview Section
         dbc.Row([

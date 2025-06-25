@@ -24,6 +24,17 @@ def register_callbacks(app, pdf_storage):
             return not is_open
         return is_open
 
+    # Manual entry modal callbacks
+    @app.callback(
+        Output("manual-entry-modal", "is_open"),
+        [Input("manual-entry-modal-btn", "n_clicks"), Input("close-manual-modal", "n_clicks"), Input("modal-generate-csv-btn", "n_clicks")],
+        [State("manual-entry-modal", "is_open")],
+    )
+    def toggle_manual_modal(n1, n2, n3, is_open):
+        if n1 or n2 or n3:
+            return not is_open
+        return is_open
+
     # Upload style options callback
     @app.callback(
         Output("upload-biomass-options", "style"),
@@ -36,8 +47,8 @@ def register_callbacks(app, pdf_storage):
 
     # Callback to show/hide sections based on label style
     @app.callback(
-        [Output("qr-section", "style"),
-         Output("biomass-section", "style")],
+        [Output("modal-qr-section", "style"),
+         Output("modal-biomass-section", "style")],
         [Input("label-style", "value")]
     )
     def toggle_sections(label_style):
@@ -48,18 +59,17 @@ def register_callbacks(app, pdf_storage):
 
     # Callback for adding biomass rows
     @app.callback(
-        [Output("biomass-table-container", "children"),
-         Output("generate-biomass-csv-btn", "disabled"),
+        [Output("modal-biomass-table-container", "children"),
          Output("biomass-data-store", "data"),
-         Output("biomass-info1", "value"),
-         Output("biomass-info2", "value"),
-         Output("biomass-info3", "value"),
-         Output("biomass-ucode", "value")],
-        [Input("add-row-btn", "n_clicks")],
-        [State("biomass-info1", "value"),
-         State("biomass-info2", "value"),
-         State("biomass-info3", "value"),
-         State("biomass-ucode", "value"),
+         Output("modal-biomass-info1", "value"),
+         Output("modal-biomass-info2", "value"),
+         Output("modal-biomass-info3", "value"),
+         Output("modal-biomass-ucode", "value")],
+        [Input("modal-add-row-btn", "n_clicks")],
+        [State("modal-biomass-info1", "value"),
+         State("modal-biomass-info2", "value"),
+         State("modal-biomass-info3", "value"),
+         State("modal-biomass-ucode", "value"),
          State("biomass-data-store", "data")]
     )
     def add_biomass_row(n_clicks, info1, info2, info3, ucode, stored_data):
@@ -79,8 +89,8 @@ def register_callbacks(app, pdf_storage):
                     style_cell={'textAlign': 'left'},
                     style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
                 )
-                return table, False, stored_data, info1 or "", info2 or "", info3 or "", ucode or ""
-            return html.Div("No data added yet."), True, [], "", "", "", ""
+                return table, stored_data, info1 or "", info2 or "", info3 or "", ucode or ""
+            return html.Div("No data added yet."), [], "", "", "", ""
             
         stored_data = stored_data or []
         new_row = {
@@ -106,7 +116,29 @@ def register_callbacks(app, pdf_storage):
             style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
         )
         
-        return table, False, stored_data, "", "", "", ""
+        return table, stored_data, "", "", "", ""
+
+    # Callback to control the generate CSV button state
+    @app.callback(
+        Output("modal-generate-csv-btn", "disabled"),
+        [Input("label-style", "value"),
+         Input("project-name", "value"),
+         Input("site-name", "value"),
+         Input("study-year", "value"),
+         Input("num-blocks", "value"),
+         Input("treatments", "value"),
+         Input("sampling-stage", "value"),
+         Input("biomass-data-store", "data")]
+    )
+    def control_generate_button(label_style, project_name, site_name, study_year, 
+                               num_blocks, treatments, sampling_stage, biomass_data):
+        if label_style == "barcode":  # Biomass mode
+            # Enable button if there's biomass data
+            return not bool(biomass_data)
+        else:  # QR mode
+            # Enable button if all required QR fields are filled
+            required_fields = [project_name, site_name, study_year, num_blocks, treatments, sampling_stage]
+            return not all(field for field in required_fields)
 
     # Callback for file upload
     @app.callback(
@@ -212,8 +244,7 @@ def register_callbacks(app, pdf_storage):
          Output("current-csv-data", "data"),
          Output("current-label-options", "data"),
          Output("generate-pdf-btn", "disabled")],
-        [Input("generate-csv-btn", "n_clicks"),
-         Input("generate-biomass-csv-btn", "n_clicks"),
+        [Input("modal-generate-csv-btn", "n_clicks"),
          Input("load-csv-btn", "n_clicks")],
         [State("project-name", "value"),
          State("site-name", "value"),
@@ -221,15 +252,16 @@ def register_callbacks(app, pdf_storage):
          State("num-blocks", "value"),
          State("treatments", "value"),
          State("sampling-stage", "value"),
+         State("label-style", "value"),
          State("biomass-data-store", "data"),
          State("stored-data", "data"),
          State("upload-label-style", "value"),
          State("upload-biomass-output-type", "value")],
         prevent_initial_call=True
     )
-    def generate_csv_data(qr_clicks, biomass_clicks, upload_clicks, 
+    def generate_csv_data(modal_clicks, upload_clicks, 
                          project_name, site_name, study_year, num_blocks, treatments,
-                         sampling_stage, biomass_data, uploaded_data,
+                         sampling_stage, label_style, biomass_data, uploaded_data,
                          upload_label_style, upload_biomass_output_type):
         
         ctx = callback_context
@@ -239,16 +271,30 @@ def register_callbacks(app, pdf_storage):
         button_id = ctx.triggered[0]['prop_id'].split('.')[0]
         
         try:
-            if button_id == "generate-csv-btn":
-                # Generate CSV data from manual QR input
-                df = create_qr_dataframe(project_name, site_name, study_year, num_blocks, 
-                                       treatments, sampling_stage)
-                label_options = {"style": "qr", "output_type": "qr"}
-                
-            elif button_id == "generate-biomass-csv-btn" and biomass_data:
-                # Generate CSV data from manual biomass input
-                df = pd.DataFrame(biomass_data)
-                label_options = {"style": "biomass", "output_type": "barcode"}  # Default to barcode for biomass
+            if button_id == "modal-generate-csv-btn":
+                # Use label style to determine which form type to process
+                if label_style == "barcode":  # This is the biomass style
+                    if biomass_data:
+                        # Generate CSV data from manual biomass input
+                        df = pd.DataFrame(biomass_data)
+                        label_options = {"style": "biomass", "output_type": "barcode"}
+                    else:
+                        # No biomass data added yet
+                        return dbc.Alert([
+                            html.I(className="fas fa-exclamation-triangle me-2"),
+                            "Please add at least one row of biomass data before generating CSV."
+                        ], color="warning"), None, None, True
+                else:  # QR style
+                    # Generate CSV data from manual QR input
+                    if not all([project_name, site_name, study_year, num_blocks, treatments, sampling_stage]):
+                        return dbc.Alert([
+                            html.I(className="fas fa-exclamation-triangle me-2"),
+                            "Please fill in all required fields for QR labels."
+                        ], color="warning"), None, None, True
+                    
+                    df = create_qr_dataframe(project_name, site_name, study_year, num_blocks, 
+                                           treatments, sampling_stage)
+                    label_options = {"style": "qr", "output_type": "qr"}
                 
             elif button_id == "load-csv-btn" and uploaded_data:
                 # Load uploaded CSV data
