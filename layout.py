@@ -354,6 +354,9 @@ def create_layout():
         dcc.Store(id="current-csv-data"),
         dcc.Store(id="current-label-options"),
         
+        # Download component for PDF downloads
+        dcc.Download(id="download-pdf"),
+        
         # Interval component for progress updates
         dcc.Interval(id="progress-interval", interval=100, n_intervals=0, disabled=True)
     ], fluid=True, style={

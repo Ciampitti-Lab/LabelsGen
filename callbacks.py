@@ -3,7 +3,7 @@ import base64
 import io
 import pandas as pd
 from datetime import datetime
-from dash import Input, Output, State, callback_context, dash_table, html
+from dash import Input, Output, State, callback_context, dash_table, html, dcc
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
@@ -356,8 +356,7 @@ def register_callbacks(app, pdf_storage):
                               style={"color": "#6c757d", "margin-bottom": "1.5rem", "font-size": "0.9rem"}),
                         dbc.Button(
                             [html.I(className="fas fa-download me-2"), "Download PDF"], 
-                            href=f"/download/{pdf_filename}", 
-                            external_link=True, 
+                            id="download-pdf-btn",
                             color="primary", 
                             size="lg",
                             style={"border-radius": "8px", "font-weight": "500"}
@@ -417,4 +416,54 @@ def register_callbacks(app, pdf_storage):
         
         if progress >= 100:
             return 100, True, {"display": "none"}  # Complete progress, stop interval, hide progress
-        return progress, False, {"display": "block"} 
+        return progress, False, {"display": "block"}
+
+    # Download callback using Dash's dcc.Download
+    @app.callback(
+        Output("download-pdf", "data"),
+        [Input("download-pdf-btn", "n_clicks")],
+        [State("current-csv-data", "data"),
+         State("current-label-options", "data")],
+        prevent_initial_call=True
+    )
+    def download_pdf(n_clicks, csv_data, label_options):
+        if not n_clicks or not csv_data or not label_options:
+            return None
+        
+        try:
+            df = pd.DataFrame(csv_data)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            
+            # Generate PDF based on options
+            if label_options["style"] == "biomass":
+                if label_options["output_type"] == "qr":
+                    pdf_filename = f"biomass_qr_labels_{timestamp}.pdf"
+                    pdf_result = create_biomass_pdf(df, pdf_filename, use_qr=True)
+                else:
+                    pdf_filename = f"biomass_barcode_labels_{timestamp}.pdf"
+                    pdf_result = create_biomass_pdf(df, pdf_filename, use_qr=False)
+            else:
+                pdf_filename = f"qr_labels_{timestamp}.pdf"
+                pdf_result = create_qr_pdf(df, pdf_filename)
+            
+            # For local development, read the file
+            if not os.environ.get('RENDER'):
+                # Read the PDF file that was saved locally
+                pdf_path = os.path.join("labels_pdf", pdf_filename)
+                if os.path.exists(pdf_path):
+                    with open(pdf_path, "rb") as f:
+                        pdf_content = f.read()
+                else:
+                    return None
+            else:
+                # For deployment, use the in-memory PDF
+                pdf_content = pdf_storage.get(pdf_filename)
+                if not pdf_content:
+                    return None
+            
+            # Return the download data
+            return dcc.send_bytes(pdf_content, pdf_filename)
+            
+        except Exception as e:
+            print(f"Download error: {str(e)}")
+            return None 
