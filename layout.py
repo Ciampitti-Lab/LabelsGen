@@ -352,7 +352,14 @@ def create_layout():
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader([
-                        html.H6("PDF Preview", className="mb-0", style={"color": "#2c3e50", "font-weight": "500"})
+                        dbc.Row([
+                            dbc.Col([
+                                html.H6("PDF Preview", className="mb-0", style={"color": "#2c3e50", "font-weight": "500"})
+                            ], md=8),
+                            dbc.Col([
+                                html.Div(style={"height": "31px"})  # Invisible spacer to match button height
+                            ], md=4)
+                        ])
                     ]),
                     dbc.CardBody([
                         html.Div(id="pdf-viewer-content", 
