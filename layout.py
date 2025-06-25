@@ -300,11 +300,43 @@ def create_layout():
                         ])
                     ]),
                     dbc.CardBody([
-                        # Progress bar (hidden by default)
+                        # Loading overlay (hidden by default)
                         html.Div([
-                            html.P("Generating PDF...", className="text-center mb-2", style={"color": "#2c3e50", "font-weight": "500"}),
-                            dbc.Progress(id="pdf-progress", value=0, style={"height": "20px"}, className="mb-3")
-                        ], id="progress-container", style={"display": "none"}),
+                            html.Div([
+                                html.Div([
+                                    html.I(className="fas fa-spinner fa-spin", style={
+                                        "font-size": "2rem", 
+                                        "color": "#007bff", 
+                                        "margin-bottom": "1rem"
+                                    }),
+                                    html.H6("Generating PDF...", style={
+                                        "color": "#2c3e50", 
+                                        "font-weight": "500",
+                                        "margin-bottom": "0.5rem"
+                                    }),
+                                    html.P("Please wait while we create your labels", style={
+                                        "color": "#6c757d", 
+                                        "font-size": "0.9rem",
+                                        "margin": "0"
+                                    })
+                                ], style={
+                                    "text-align": "center",
+                                    "padding": "2rem"
+                                })
+                            ], style={
+                                "position": "absolute",
+                                "top": "0",
+                                "left": "0",
+                                "right": "0", 
+                                "bottom": "0",
+                                "background-color": "rgba(255, 255, 255, 0.95)",
+                                "display": "flex",
+                                "align-items": "center",
+                                "justify-content": "center",
+                                "z-index": "1000",
+                                "border-radius": "10px"
+                            })
+                        ], id="loading-overlay", style={"display": "none"}),
                         
                         html.Div(id="csv-viewer-content", 
                                 children=[
@@ -312,7 +344,7 @@ def create_layout():
                                           className="text-center text-muted py-5", 
                                           style={"font-style": "italic"})
                                 ])
-                    ], style={"max-height": "400px", "overflow-y": "auto", "padding": "1rem"})
+                    ], style={"max-height": "400px", "overflow-y": "auto", "padding": "1rem", "position": "relative"})
                 ], className="shadow-sm h-100", style={"border": "none", "border-radius": "10px"})
             ], md=6),
             
@@ -380,10 +412,7 @@ def create_layout():
         dcc.Store(id="current-label-options"),
         
         # Download component for PDF downloads
-        dcc.Download(id="download-pdf"),
-        
-        # Interval component for progress updates
-        dcc.Interval(id="progress-interval", interval=100, n_intervals=0, disabled=True)
+        dcc.Download(id="download-pdf")
     ], fluid=True, style={
         "background-color": "#ffffff", 
         "min-height": "100vh", 

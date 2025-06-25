@@ -345,23 +345,22 @@ def register_callbacks(app, pdf_storage):
                 f"Error generating CSV: {str(e)}"
             ], color="danger"), None, None, True
             
-    # Progress bar control callback
+    # Loading overlay control callback
     @app.callback(
-        [Output("progress-container", "style"),
-         Output("progress-interval", "disabled"),
-         Output("pdf-progress", "value", allow_duplicate=True)],
+        Output("loading-overlay", "style"),
         [Input("generate-pdf-btn", "n_clicks")],
         prevent_initial_call=True
     )
-    def start_progress(n_clicks):
+    def show_loading(n_clicks):
         if n_clicks:
-            return {"display": "block"}, False, 0  # Show progress, enable interval, reset progress
-        return {"display": "none"}, True, 0
+            return {"display": "block"}  # Show loading overlay
+        return {"display": "none"}
 
     # PDF generation callback
     @app.callback(
         [Output("pdf-viewer-content", "children"),
-         Output("results-area", "children")],
+         Output("results-area", "children"),
+         Output("loading-overlay", "style", allow_duplicate=True)],
         [Input("generate-pdf-btn", "n_clicks")],
         [State("current-csv-data", "data"),
          State("current-label-options", "data")],
@@ -369,7 +368,7 @@ def register_callbacks(app, pdf_storage):
     )
     def generate_pdf_from_csv(n_clicks, csv_data, label_options):
         if not n_clicks or not csv_data or not label_options:
-            return None, None
+            return None, None, {"display": "none"}
         
         try:
             df = pd.DataFrame(csv_data)
@@ -423,8 +422,8 @@ def register_callbacks(app, pdf_storage):
                 })
             ])
             
-            # No longer show success alert - PDF viewer shows success state
-            return pdf_viewer, None
+            # Hide loading overlay when done and return results
+            return pdf_viewer, None, {"display": "none"}
             
         except Exception as e:
             error_alert = dbc.Alert([
@@ -432,23 +431,8 @@ def register_callbacks(app, pdf_storage):
                 f"Error generating PDF: {str(e)}"
             ], color="danger")
             
-            return None, error_alert
-
-    # Progress bar simulation callback
-    @app.callback(
-        [Output("pdf-progress", "value"),
-         Output("progress-interval", "disabled", allow_duplicate=True),
-         Output("progress-container", "style", allow_duplicate=True)],
-        [Input("progress-interval", "n_intervals")],
-        prevent_initial_call=True
-    )
-    def update_progress(n_intervals):
-        # Simulate progress over 3 seconds (30 intervals * 100ms each)
-        progress = min(100, n_intervals * 4)
-        
-        if progress >= 100:
-            return 100, True, {"display": "none"}  # Complete progress, stop interval, hide progress
-        return progress, False, {"display": "block"}
+            # Hide loading overlay on error too
+            return None, error_alert, {"display": "none"}
 
     # Download callback using Dash's dcc.Download
     @app.callback(
