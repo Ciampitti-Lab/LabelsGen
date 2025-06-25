@@ -8,7 +8,7 @@ from server import setup_download_route
 
 
 # Initialize the Dash app
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], assets_folder='assets')
 app.title = "🌱 CiampittiLab Labels Generator"
 app.config.suppress_callback_exceptions = True
 
