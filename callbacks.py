@@ -377,22 +377,8 @@ def register_callbacks(app, pdf_storage):
                 })
             ])
             
-            # Create success alert
-            result_alert = dbc.Alert([
-                html.H5([
-                    html.I(className="fas fa-check-circle me-2"),
-                    "PDF Generated Successfully"
-                ], className="alert-heading mb-3", style={"color": "#28a745", "font-weight": "500"}),
-                html.P(f"Generated {len(df)} labels", style={"margin-bottom": "1rem", "color": "#155724"}),
-                dbc.Button([
-                    html.I(className="fas fa-download me-2"),
-                    "Download PDF"
-                ], href=f"/download/{pdf_filename}", 
-                          external_link=True, color="success", size="lg",
-                          style={"border-radius": "8px", "font-weight": "500"})
-            ], color="success", style={"border": "none", "border-radius": "10px"})
-            
-            return pdf_viewer, result_alert
+            # No longer show success alert - PDF viewer shows success state
+            return pdf_viewer, None
             
         except Exception as e:
             error_alert = dbc.Alert([
