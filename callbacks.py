@@ -164,7 +164,8 @@ def register_callbacks(app, pdf_storage):
             decoded = base64.b64decode(content_string)
             
             if filename.endswith('.csv'):
-                df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+                # Read CSV with all columns as strings to preserve leading zeros
+                df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), dtype=str)
                 
                 feedback = dbc.Alert([
                     html.I(className="fas fa-check-circle me-2"),
