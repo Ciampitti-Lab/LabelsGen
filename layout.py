@@ -133,7 +133,8 @@ def create_layout():
                                 id="upload-label-style",
                                 options=[
                                     {"label": "Luiz Felipe Almeida Style (QR Codes)", "value": "qr"},
-                                    {"label": "Biomass Luiz Rosso Style", "value": "biomass"}
+                                    {"label": "Biomass Luiz Rosso Style", "value": "biomass"},
+                                    {"label": "Line Style (Centered for Narrow Plastic)", "value": "line"}
                                 ],
                                 value="qr",
                                 clearable=False,
@@ -175,7 +176,8 @@ def create_layout():
                             id="label-style",
                             options=[
                                 {"label": "Luiz Felipe Almeida Style (QR Codes)", "value": "qr"},
-                                {"label": "Biomass Luiz Rosso Style (Barcodes/QR)", "value": "barcode"}
+                                {"label": "Biomass Luiz Rosso Style (Barcodes/QR)", "value": "barcode"},
+                                {"label": "Line Style (Centered for Narrow Plastic)", "value": "line"}
                             ],
                             value="qr",
                             clearable=False,

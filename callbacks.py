@@ -7,7 +7,7 @@ from dash import Input, Output, State, callback_context, dash_table, html, dcc
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
-from utils import create_qr_pdf, create_biomass_pdf, create_qr_dataframe
+from utils import create_qr_pdf, create_biomass_pdf, create_line_pdf, create_qr_dataframe
 
 
 def register_callbacks(app, pdf_storage):
@@ -54,7 +54,7 @@ def register_callbacks(app, pdf_storage):
     def toggle_sections(label_style):
         if label_style == "qr":
             return {"display": "block"}, {"display": "none"}
-        else:
+        else:  # For both "barcode" (biomass) and "line" styles
             return {"display": "none"}, {"display": "block"}
 
     # Callback for adding biomass rows
@@ -132,7 +132,7 @@ def register_callbacks(app, pdf_storage):
     )
     def control_generate_button(label_style, project_name, site_name, study_year, 
                                num_blocks, treatments, sampling_stage, biomass_data):
-        if label_style == "barcode":  # Biomass mode
+        if label_style in ["barcode", "line"]:  # Biomass or Line mode
             # Enable button if there's biomass data
             return not bool(biomass_data)
         else:  # QR mode
@@ -273,16 +273,19 @@ def register_callbacks(app, pdf_storage):
         try:
             if button_id == "modal-generate-csv-btn":
                 # Use label style to determine which form type to process
-                if label_style == "barcode":  # This is the biomass style
+                if label_style in ["barcode", "line"]:  # This is the biomass or line style
                     if biomass_data:
                         # Generate CSV data from manual biomass input
                         df = pd.DataFrame(biomass_data)
-                        label_options = {"style": "biomass", "output_type": "barcode"}
+                        if label_style == "line":
+                            label_options = {"style": "line", "output_type": "qr"}
+                        else:
+                            label_options = {"style": "biomass", "output_type": "barcode"}
                     else:
                         # No biomass data added yet
                         return dbc.Alert([
                             html.I(className="fas fa-exclamation-triangle me-2"),
-                            "Please add at least one row of biomass data before generating CSV."
+                            "Please add at least one row of data before generating CSV."
                         ], color="warning"), None, None, True
                 else:  # QR style
                     # Generate CSV data from manual QR input
@@ -299,10 +302,13 @@ def register_callbacks(app, pdf_storage):
             elif button_id == "load-csv-btn" and uploaded_data:
                 # Load uploaded CSV data
                 df = pd.DataFrame(uploaded_data)
-                label_options = {
-                    "style": upload_label_style or "qr",
-                    "output_type": upload_biomass_output_type or "barcode"
-                }
+                if upload_label_style == "line":
+                    label_options = {"style": "line", "output_type": "qr"}
+                else:
+                    label_options = {
+                        "style": upload_label_style or "qr",
+                        "output_type": upload_biomass_output_type or "barcode"
+                    }
                 
             else:
                 return None, None, None, True
@@ -382,6 +388,9 @@ def register_callbacks(app, pdf_storage):
                 else:
                     pdf_filename = f"biomass_barcode_labels_{timestamp}.pdf"
                     pdf_result = create_biomass_pdf(df, pdf_filename, use_qr=False)
+            elif label_options["style"] == "line":
+                pdf_filename = f"line_labels_{timestamp}.pdf"
+                pdf_result = create_line_pdf(df, pdf_filename)
             else:
                 pdf_filename = f"qr_labels_{timestamp}.pdf"
                 pdf_result = create_qr_pdf(df, pdf_filename)
@@ -458,6 +467,9 @@ def register_callbacks(app, pdf_storage):
                 else:
                     pdf_filename = f"biomass_barcode_labels_{timestamp}.pdf"
                     pdf_result = create_biomass_pdf(df, pdf_filename, use_qr=False)
+            elif label_options["style"] == "line":
+                pdf_filename = f"line_labels_{timestamp}.pdf"
+                pdf_result = create_line_pdf(df, pdf_filename)
             else:
                 pdf_filename = f"qr_labels_{timestamp}.pdf"
                 pdf_result = create_qr_pdf(df, pdf_filename)

@@ -137,6 +137,68 @@ def create_biomass_pdf(df, pdf_file_name, use_qr=False):
         return pdf_path  # Return file path for local development
 
 
+def create_line_pdf(df, pdf_file_name):
+    """Create line-style PDF labels for narrow plastic pieces - centered design with minimal info"""
+    page_width = 3
+    page_height = 2
+    
+    # Use in-memory buffer for deployment, file system for local dev
+    if os.environ.get('RENDER'):
+        from io import BytesIO
+        buffer = BytesIO()
+        page = canvas.Canvas(buffer)
+    else:
+        pdf_path = os.path.join("labels_pdf", pdf_file_name)
+        page = canvas.Canvas(pdf_path)
+    
+    page.setPageSize(size=(page_width*inch, page_height*inch))
+    
+    for i in range(len(df)):
+        # Draw a thin border for reference (optional)
+        page.rect(0.05*inch, 0.05*inch, 2.9*inch, 1.9*inch, stroke=1, fill=0)
+        
+        # Center everything in a narrow band in the middle
+        center_x = 1.5*inch  # Center of the 3-inch width
+        center_y = 1.0*inch  # Center of the 2-inch height
+        
+        # Draw ID text - main identifier, larger and bold
+        id_text = str(df.iloc[i].get('info1', 'ID'))
+        page.setFont('Helvetica-Bold', 16)
+        page.drawCentredString(center_x, center_y + 0.3*inch, id_text)
+        
+        # Draw QR code - positioned right next to the ID text
+        qr_id = str(df.iloc[i].get('info1', 'ID'))
+        qr_code = make_qr(qr_id)
+        safe_qr_id = qr_id.replace('/', '_').replace('\\', '_').replace(' ', '_')
+        qr_image = f"temp_line_{safe_qr_id}_{i}.png"
+        qr_code.save(qr_image)
+        
+        # QR code positioned in the center, smaller for compact design
+        qr_size = 0.5*inch
+        qr_x = center_x - qr_size/2  # Center the QR code
+        qr_y = center_y - 0.3*inch   # Position below the ID text
+        page.drawImage(qr_image, qr_x, qr_y, width=qr_size, height=qr_size)
+        
+        # Clean up temp QR image
+        if os.path.exists(qr_image):
+            os.remove(qr_image)
+        
+        # Optional: Add a small secondary info if available (very compact)
+        if df.iloc[i].get('info2') and str(df.iloc[i]['info2']).strip():
+            page.setFont('Helvetica', 8)
+            page.drawCentredString(center_x, qr_y - 0.15*inch, str(df.iloc[i]['info2']))
+        
+        page.showPage()
+    
+    page.save()
+    
+    if os.environ.get('RENDER'):
+        buffer.seek(0)
+        return buffer  # Return buffer for in-memory serving
+    else:
+        return pdf_path  # Return file path for local development
+
+
 def create_qr_dataframe(project_name, site_name, study_year, num_blocks, treatments, sampling_stage):
     """Create DataFrame for QR code labels"""
     data = {
